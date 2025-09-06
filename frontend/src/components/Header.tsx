@@ -26,16 +26,6 @@ export function Header() {
           <img src="/logo.png" alt="EcoFinds" width={120} height={40} className="h-8 w-auto" />
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/" className="text-foreground hover:text-primary transition-colors">
-            Browse
-          </Link>
-          <Link to="/categories" className="text-foreground hover:text-primary transition-colors">
-            Categories
-          </Link>
-        </nav>
-
         {/* User Actions */}
         <div className="flex items-center space-x-4">
           {user ? (
