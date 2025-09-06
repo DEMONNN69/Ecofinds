@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { apiClient } from "@/lib/api"
+import { apiClient, Cart } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,31 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
-
-interface CartItem {
-  id: number
-  product: {
-    id: number
-    title: string
-    price: number
-    image_url: string
-    seller: {
-      id: number
-      username: string
-    }
-  }
-  quantity: number
-  added_at: string
-}
-
-interface Cart {
-  id: number
-  user_id: number
-  items: CartItem[]
-  total_items: number
-  total_price: number
-  updated_at: string
-}
+import { getProductImageUrl } from "@/lib/imageUtils"
 
 export default function CartPage() {
   const { user } = useAuth()
@@ -56,10 +32,9 @@ export default function CartPage() {
 
   const fetchCart = async () => {
     try {
-      const response = await apiClient.getCart()
-      if (response.data) {
-        setCart(response.data)
-      }
+      const cartData = await apiClient.getCart()
+      // getCart returns response.data directly, so cartData is the cart object
+      setCart(cartData)
     } catch (error) {
       toast({
         title: "Error",
@@ -75,14 +50,13 @@ export default function CartPage() {
     if (newQuantity < 1) return
 
     try {
-      const response = await apiClient.updateCartItem(itemId, newQuantity)
-      if (response.data) {
-        await fetchCart() // Refresh cart
-        toast({
-          title: "Updated",
-          description: "Cart item quantity updated",
-        })
-      }
+      await apiClient.updateCartItem(itemId, newQuantity)
+      // updateCartItem returns response.data directly, so we just refresh the cart
+      await fetchCart() // Refresh cart
+      toast({
+        title: "Updated",
+        description: "Cart item quantity updated",
+      })
     } catch (error) {
       toast({
         title: "Error",
@@ -94,14 +68,13 @@ export default function CartPage() {
 
   const removeItem = async (itemId: number) => {
     try {
-      const response = await apiClient.removeFromCart(itemId)
-      if (response.status === 204) {
-        await fetchCart() // Refresh cart
-        toast({
-          title: "Removed",
-          description: "Item removed from cart",
-        })
-      }
+      await apiClient.removeFromCart(itemId)
+      // removeFromCart returns void, so we just refresh the cart
+      await fetchCart() // Refresh cart
+      toast({
+        title: "Removed",
+        description: "Item removed from cart",
+      })
     } catch (error) {
       toast({
         title: "Error",
@@ -129,30 +102,23 @@ export default function CartPage() {
         items: cart.items.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          price: item.product.price,
+          price: parseFloat(item.product.price), // Convert string to number
         })),
         shipping_address: shippingAddress,
         payment_method: paymentMethod,
-        total_amount: cart.total_price,
+        total_amount: parseFloat(cart.total_price.toString()), // Convert to number
       }
 
-      const response = await apiClient.createPurchase(purchaseData)
-      if (response.data) {
-        toast({
-          title: "Order Placed!",
-          description: `Your order #${response.data.order_number} has been placed successfully`,
-        })
+      const purchase = await apiClient.createPurchase(purchaseData)
+      // createPurchase returns response.data directly, so purchase is the purchase object
+      toast({
+        title: "Order Placed!",
+        description: `Your order #${purchase.order_number} has been placed successfully`,
+      })
 
-        // Clear cart and redirect
-        await apiClient.clearCart()
-        navigate("/profile?tab=purchases")
-      } else {
-        toast({
-          title: "Checkout Failed",
-          description: response.error || "Please try again",
-          variant: "destructive",
-        })
-      }
+      // Clear cart and redirect
+      await apiClient.clearCart()
+      navigate("/profile?tab=purchases")
     } catch (error) {
       toast({
         title: "Error",
@@ -203,7 +169,7 @@ export default function CartPage() {
                 <div className="flex items-center gap-4">
                   <div className="relative w-20 h-20 rounded-md overflow-hidden">
                     <img
-                      src={item.product.image_url || "/placeholder.svg?height=80&width=80"}
+                      src={getProductImageUrl(item.product.image_url, "80x80")}
                       alt={item.product.title}
                       className="w-full h-full object-cover"
                     />
@@ -211,7 +177,9 @@ export default function CartPage() {
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg mb-1">{item.product.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-2">Sold by {item.product.seller.username}</p>
+                    <p className="text-muted-foreground text-sm mb-2">
+                      Sold by {item.product.seller?.username || 'Unknown Seller'}
+                    </p>
                     <p className="text-lg font-bold text-primary">${item.product.price}</p>
                   </div>
 
@@ -253,7 +221,7 @@ export default function CartPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Items ({cart.total_items})</span>
-                <span>${cart.total_price.toFixed(2)}</span>
+                <span>${parseFloat(cart.total_price.toString()).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
@@ -262,7 +230,7 @@ export default function CartPage() {
               <div className="border-t pt-4">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${cart.total_price.toFixed(2)}</span>
+                  <span>${parseFloat(cart.total_price.toString()).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>

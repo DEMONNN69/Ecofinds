@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { User, Package, ShoppingBag, TrendingUp } from "lucide-react"
+import { getFullImageUrl, getProductImageUrl } from "@/lib/imageUtils"
 
 interface UserProfile {
   id: number
@@ -135,7 +136,7 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
         <Avatar className="h-16 w-16">
-          <AvatarImage src={user?.profile_image_url || "/placeholder.svg"} alt={user?.username} />
+          <AvatarImage src={getFullImageUrl(user?.profile_image_url) || "/placeholder.svg"} alt={user?.username} />
           <AvatarFallback className="text-xl">{user?.username.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div>
@@ -305,7 +306,7 @@ export default function ProfilePage() {
                           <div key={index} className="flex items-center gap-3">
                             <div className="relative w-12 h-12 rounded overflow-hidden">
                               <img
-                                src={item.product.image_url || "/placeholder.svg?height=48&width=48"}
+                                src={getProductImageUrl(item.product.image_url, "48x48")}
                                 alt={item.product.title}
                                 className="w-full h-full object-cover"
                               />

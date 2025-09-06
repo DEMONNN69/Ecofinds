@@ -53,7 +53,7 @@ class Product(models.Model):
     manual_instructions = models.BooleanField(default=False, help_text="Manual/Instructions included")
     working_condition_description = models.TextField(blank=True, help_text="Detailed working condition description")
     
-    # Media and Location
+    # Media and Location (keep main image for backward compatibility)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     location = models.CharField(max_length=200, blank=True)
     
@@ -72,6 +72,42 @@ class Product(models.Model):
 
     @property
     def image_url(self):
+        # First try to get main image from ProductImage model
+        main_image = self.images.filter(is_main=True).first()
+        if main_image and main_image.image:
+            return main_image.image.url
+        # Fallback to the original image field
         if self.image:
             return self.image.url
         return None
+
+    @property
+    def all_images(self):
+        """Get all product images ordered by main image first"""
+        return self.images.all().order_by('-is_main', 'order')
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/')
+    is_main = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    alt_text = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.product.title} - Image {self.order}"
+
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        return None
+
+    def save(self, *args, **kwargs):
+        # Ensure only one main image per product
+        if self.is_main:
+            ProductImage.objects.filter(product=self.product, is_main=True).update(is_main=False)
+        super().save(*args, **kwargs)

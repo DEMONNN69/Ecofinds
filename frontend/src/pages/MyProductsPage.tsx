@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { useToast } from "../hooks/use-toast"
+import { getProductImageUrl } from "../lib/imageUtils"
 import { Plus, Edit, Trash2, Eye } from "lucide-react"
 
 export default function MyProductsPage() {
@@ -104,7 +105,7 @@ export default function MyProductsPage() {
             <Card key={product.id} className="overflow-hidden">
               <div className="aspect-square relative">
                 <img
-                  src={product.image_url || "/placeholder.svg?height=300&width=300"}
+                  src={getProductImageUrl(product.image_url, "300x300")}
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />

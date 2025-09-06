@@ -19,15 +19,6 @@ export interface User {
   updated_at: string;
 }
 
-export interface ProductImage {
-  id: number;
-  image: string;
-  image_url: string;
-  is_main: boolean;
-  order: number;
-  alt_text?: string;
-}
-
 export interface Product {
   id: number;
   title: string;
@@ -35,34 +26,10 @@ export interface Product {
   category: number;
   category_name?: string;
   price: string;
-  quantity: number;
-  condition: string;
-  
-  // Product Details
-  year_of_manufacture?: number;
-  brand?: string;
-  model?: string;
-  
-  // Physical Properties  
-  length?: number;
-  width?: number;
-  height?: number;
-  weight?: number;
-  material?: string;
-  color?: string;
-  
-  // Package and Documentation
-  original_packaging: boolean;
-  manual_instructions: boolean;
-  working_condition_description?: string;
-  
-  // Media and Location
   image_url?: string;
-  images?: ProductImage[];
+  condition: string;
   location?: string;
-  
-  // Seller and Status
-  seller?: User;
+  seller: User;
   is_sold: boolean;
   view_count?: number;
   created_at: string;
