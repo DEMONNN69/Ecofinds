@@ -2,28 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { apiClient } from "../lib/api"
+import { apiClient, Product } from "../lib/api"
 import { useAuth } from "../contexts/AuthContext"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { useToast } from "../hooks/use-toast"
 import { Plus, Edit, Trash2, Eye } from "lucide-react"
-
-interface Product {
-  id: number
-  title: string
-  description: string
-  category: string
-  price: number
-  image_url: string
-  condition: string
-  location: string
-  is_sold: boolean
-  view_count: number
-  created_at: string
-  updated_at: string
-}
 
 export default function MyProductsPage() {
   const { user } = useAuth()
@@ -43,9 +28,7 @@ export default function MyProductsPage() {
   const fetchMyProducts = async () => {
     try {
       const response = await apiClient.getMyListings()
-      if (response.data) {
-        setProducts(response.data.results || [])
-      }
+      setProducts(response.results || [])
     } catch (error) {
       toast({
         title: "Error",
@@ -63,21 +46,13 @@ export default function MyProductsPage() {
     }
 
     try {
-      const response = await apiClient.deleteProduct(productId)
-      if (response.status === 204) {
-        toast({
-          title: "Deleted",
-          description: "Product deleted successfully",
-        })
-        // Remove from local state
-        setProducts(products.filter((p) => p.id !== productId))
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to delete product",
-          variant: "destructive",
-        })
-      }
+      await apiClient.deleteProduct(productId)
+      toast({
+        title: "Deleted",
+        description: "Product deleted successfully",
+      })
+      // Remove from local state
+      setProducts(products.filter((p) => p.id !== productId))
     } catch (error) {
       toast({
         title: "Error",
@@ -154,7 +129,7 @@ export default function MyProductsPage() {
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                   <Eye className="h-4 w-4" />
-                  <span>{product.view_count} views</span>
+                  <span>{product.view_count || 0} views</span>
                   <span>•</span>
                   <span>{new Date(product.created_at).toLocaleDateString()}</span>
                 </div>

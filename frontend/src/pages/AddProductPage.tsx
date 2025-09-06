@@ -1,15 +1,16 @@
 
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
-import { apiClient } from "@/lib/api"
+import { apiClient, Category } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Upload, ArrowLeft } from "lucide-react"
 
@@ -18,6 +19,7 @@ export default function AddProductPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
 
+  const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -28,6 +30,26 @@ export default function AddProductPage() {
   })
   const [image, setImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const categoriesData = await apiClient.getCategories()
+      setCategories(categoriesData)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive",
+      })
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
 
   if (!user) {
     navigate("/login")
@@ -50,10 +72,10 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.title || !formData.description || !formData.price) {
+    if (!formData.title || !formData.description || !formData.price || !formData.category) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields including category",
         variant: "destructive",
       })
       return
@@ -74,25 +96,17 @@ export default function AddProductPage() {
         productFormData.append("image", image)
       }
 
-      const response = await apiClient.createProduct(productFormData)
+      const product = await apiClient.createProduct(productFormData)
 
-      if (response.data) {
-        toast({
-          title: "Success",
-          description: "Product added successfully!",
-        })
-        navigate("/my-products")
-      } else {
-        toast({
-          title: "Error",
-          description: response.error || "Failed to add product",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "Product added successfully!",
+      })
+      navigate("/my-products")
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.response?.data?.error || "Failed to add product",
         variant: "destructive",
       })
     } finally {
@@ -141,14 +155,28 @@ export default function AddProductPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  name="category"
+                <Label htmlFor="category">Category *</Label>
+                <Select
                   value={formData.category}
-                  onChange={handleChange}
-                  placeholder="e.g., Electronics, Clothing"
-                />
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoriesLoading ? (
+                      <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                    ) : categories.length > 0 ? (
+                      categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -170,19 +198,21 @@ export default function AddProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="condition">Condition</Label>
-                <select
-                  id="condition"
-                  name="condition"
+                <Select
                   value={formData.condition}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md"
+                  onValueChange={(value) => setFormData({ ...formData, condition: value })}
                 >
-                  <option value="new">New</option>
-                  <option value="like_new">Like New</option>
-                  <option value="good">Good</option>
-                  <option value="fair">Fair</option>
-                  <option value="poor">Poor</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select condition" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="like_new">Like New</SelectItem>
+                    <SelectItem value="good">Good</SelectItem>
+                    <SelectItem value="fair">Fair</SelectItem>
+                    <SelectItem value="poor">Poor</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

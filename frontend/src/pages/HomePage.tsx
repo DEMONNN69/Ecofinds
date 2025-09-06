@@ -2,40 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { apiClient } from "../lib/api"
+import { apiClient, Product, Category } from "../lib/api"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { Input } from "../components/ui/input"
 import { Search, Grid, List } from "lucide-react"
 import { useToast } from "../hooks/use-toast"
-
-interface Product {
-  id: number
-  title: string
-  description: string
-  category: string
-  price: number
-  image_url: string
-  condition: string
-  location: string
-  seller: {
-    id: number
-    username: string
-    profile_image_url: string
-  }
-  is_sold: boolean
-  created_at: string
-}
-
-interface Category {
-  id: number
-  name: string
-  slug: string
-  description: string
-  icon: string
-  product_count: number
-}
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -57,13 +30,8 @@ export default function HomePage() {
         apiClient.getCategories(),
       ])
 
-      if (productsResponse.data) {
-        setProducts(productsResponse.data.results || [])
-      }
-
-      if (categoriesResponse.data) {
-        setCategories(categoriesResponse.data || [])
-      }
+      setProducts(productsResponse.results || [])
+      setCategories(categoriesResponse || [])
     } catch (error) {
       toast({
         title: "Error",
@@ -88,9 +56,7 @@ export default function HomePage() {
         category: selectedCategory,
       })
 
-      if (response.data) {
-        setProducts(response.data.results || [])
-      }
+      setProducts(response.results || [])
     } catch (error) {
       toast({
         title: "Error",
@@ -111,9 +77,7 @@ export default function HomePage() {
         category: categorySlug || undefined,
       })
 
-      if (response.data) {
-        setProducts(response.data.results || [])
-      }
+      setProducts(response.results || [])
     } catch (error) {
       toast({
         title: "Error",
@@ -248,12 +212,14 @@ export default function HomePage() {
                     <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{product.description}</p>
 
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-2xl font-bold text-primary">${product.price}</span>
+                      <span className="text-2xl font-bold text-primary">
+                        ${product.price}
+                      </span>
                       <Badge variant="outline">{product.condition}</Badge>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{product.seller.username}</span>
+                      <span>{product.seller?.username || 'Unknown Seller'}</span>
                       {product.location && (
                         <>
                           <span>•</span>

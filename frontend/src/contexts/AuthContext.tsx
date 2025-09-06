@@ -35,8 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on mount
-    const token = localStorage.getItem("access_token")
-    if (token) {
+    if (apiClient.isAuthenticated()) {
       refreshUser()
     } else {
       setLoading(false)
@@ -45,17 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const response = await apiClient.getUserProfile()
-      if (response.data) {
-        setUser(response.data)
-      } else {
-        // Token might be invalid
-        apiClient.clearToken()
-        setUser(null)
-      }
+      const userData = await apiClient.getUserProfile()
+      setUser(userData)
     } catch (error) {
       console.error("Failed to refresh user:", error)
-      apiClient.clearToken()
       setUser(null)
     } finally {
       setLoading(false)
@@ -64,19 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await apiClient.login({ email, password })
-      if (response.data) {
-        setUser({
-          id: response.data.id,
-          email: response.data.email,
-          username: response.data.username,
-        })
-        return { success: true }
-      } else {
-        return { success: false, error: response.error || "Login failed" }
-      }
-    } catch (error) {
-      return { success: false, error: "Network error occurred" }
+      const userData = await apiClient.login({ email, password })
+      setUser(userData)
+      return { success: true }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Login failed"
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -87,20 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username: string
   }) => {
     try {
-      const response = await apiClient.register(userData)
-      if (response.data) {
-        // Auto-login after successful registration
-        setUser({
-          id: response.data.id,
-          email: response.data.email,
-          username: response.data.username,
-        })
-        return { success: true }
-      } else {
-        return { success: false, error: response.error || "Registration failed" }
-      }
-    } catch (error) {
-      return { success: false, error: "Network error occurred" }
+      const registeredUser = await apiClient.register(userData)
+      setUser(registeredUser)
+      return { success: true }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Registration failed"
+      return { success: false, error: errorMessage }
     }
   }
 
