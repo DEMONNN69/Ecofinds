@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Search, Filter, Grid3X3 } from "lucide-react"
+import { ArrowLeft, Search, Filter, Grid3X3, ShoppingBag, Package, TrendingUp, Star, Leaf, Sparkles, Calendar, CheckCircle } from "lucide-react"
 import { getProductImageUrl } from "@/lib/imageUtils"
 
 export default function PurchaseHistoryPage() {
@@ -109,11 +109,26 @@ export default function PurchaseHistoryPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading purchase history...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#F8FDF8] via-[#FFF8DC] to-[#B7E4C7]/20 relative overflow-hidden">
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Leaf className="absolute top-20 left-[10%] w-8 h-8 text-[#52B788]/20 animate-pulse" />
+          <Sparkles className="absolute top-32 right-[15%] w-6 h-6 text-[#2D5016]/30 animate-bounce" />
+          <ShoppingBag className="absolute bottom-40 left-[20%] w-10 h-10 text-[#52B788]/15 animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#52B788] to-[#2D5016] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <ShoppingBag className="w-10 h-10 text-white" />
+              </div>
+              <div className="space-y-2">
+                <div className="w-48 h-4 bg-[#52B788]/20 rounded-full mx-auto animate-pulse"></div>
+                <div className="w-32 h-3 bg-[#52B788]/10 rounded-full mx-auto animate-pulse"></div>
+              </div>
+              <p className="text-[#2D5016]/70 mt-4 text-lg">Loading purchase history...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -121,157 +136,281 @@ export default function PurchaseHistoryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold">Previous Purchases</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#F8FDF8] via-[#FFF8DC] to-[#B7E4C7]/20 relative overflow-hidden">
+      {/* Floating Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <Leaf className="absolute top-20 left-[10%] w-8 h-8 text-[#52B788]/20 animate-pulse" />
+        <Sparkles className="absolute top-32 right-[15%] w-6 h-6 text-[#2D5016]/30 animate-bounce" />
+        <ShoppingBag className="absolute bottom-40 left-[20%] w-10 h-10 text-[#52B788]/15 animate-pulse" style={{ animationDelay: '1s' }} />
+        <Star className="absolute bottom-60 right-[25%] w-5 h-5 text-[#2D5016]/25 animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header */}
+        <div className="mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-6 group hover:bg-white/60 backdrop-blur-sm border border-white/20 transition-all duration-300"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+            Back
+          </Button>
+          
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#52B788] to-[#2D5016] rounded-full flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold text-[#1B4332]">Purchase History</h1>
+              </div>
+              <p className="text-[#2D5016]/70 text-lg">
+                Track your sustainable shopping journey
+              </p>
             </div>
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date_desc">Newest First</SelectItem>
-                <SelectItem value="date_asc">Oldest First</SelectItem>
-                <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                <SelectItem value="name_asc">Name: A to Z</SelectItem>
-                <SelectItem value="name_desc">Name: Z to A</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Filter */}
-            <Select value={filterBy} onValueChange={setFilterBy}>
-              <SelectTrigger className="w-[140px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Layout toggle (for future use) */}
-            <Button variant="outline" size="icon">
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Results count */}
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground">
-          {sortedItems.length} item{sortedItems.length !== 1 ? 's' : ''} found
-        </p>
-      </div>
-
-      {/* Purchase Items List */}
-      {sortedItems.length > 0 ? (
-        <div className="space-y-3">
-          {sortedItems.map((item, index) => (
-            <Card key={`${item.purchaseId}-${item.product.id}-${index}`} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  {/* Product Image */}
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={getProductImageUrl(item.product.image_url, "64x64")}
-                      alt={item.product.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-lg leading-6 truncate mb-1">
-                          {item.product.title}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>${item.price}</span>
-                          {item.product.category_name && (
-                            <Badge variant="outline" className="text-xs">
-                              {item.product.category_name}
-                            </Badge>
-                          )}
-                          {item.product.seller?.username && (
-                            <span>Sold by {item.product.seller.username}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Order Info */}
-                      <div className="text-right ml-4">
-                        <Badge 
-                          variant={item.status === "completed" ? "default" : 
-                                 item.status === "pending" ? "secondary" : "destructive"}
-                          className="mb-2"
-                        >
-                          {item.status}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground">
-                          Order #{item.orderNumber}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(item.purchaseDate).toLocaleDateString()}
-                        </p>
-                        {item.quantity > 1 && (
-                          <p className="text-xs text-muted-foreground">
-                            Qty: {item.quantity}
-                          </p>
-                        )}
-                      </div>
+          {/* Stats Cards */}
+          {sortedItems.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#2D5016]/60 text-sm font-medium">Total Purchases</p>
+                      <p className="text-2xl font-bold text-[#1B4332]">{sortedItems.length}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-full flex items-center justify-center">
+                      <Package className="w-6 h-6 text-[#52B788]" />
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#2D5016]/60 text-sm font-medium">Total Spent</p>
+                      <p className="text-2xl font-bold text-[#1B4332]">
+                        ${sortedItems.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-[#52B788]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#2D5016]/60 text-sm font-medium">Completed Orders</p>
+                      <p className="text-2xl font-bold text-[#1B4332]">
+                        {sortedItems.filter(item => item.status === 'completed').length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-[#52B788]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="text-muted-foreground">
-              <Grid3X3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">No purchases found</h3>
-              <p className="mb-4">
-                {searchTerm || filterBy !== "all" 
-                  ? "Try adjusting your search or filters" 
-                  : "You haven't made any purchases yet"}
-              </p>
-              <Button asChild>
-                <Link to="/">Start Shopping</Link>
+
+        {/* Filters and Search */}
+        <Card className="mb-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#2D5016]/60" />
+                <Input
+                  placeholder="Search your purchases..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20 bg-white/70 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
+                />
+              </div>
+
+              {/* Sort */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px] border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-300">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-white/95 backdrop-blur-sm border-[#52B788]/30">
+                  <SelectItem value="date_desc">Newest First</SelectItem>
+                  <SelectItem value="date_asc">Oldest First</SelectItem>
+                  <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                  <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                  <SelectItem value="name_asc">Name: A to Z</SelectItem>
+                  <SelectItem value="name_desc">Name: Z to A</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Filter */}
+              <Select value={filterBy} onValueChange={setFilterBy}>
+                <SelectTrigger className="w-[140px] border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-300">
+                  <Filter className="mr-2 h-4 w-4 text-[#52B788]" />
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent className="bg-white/95 backdrop-blur-sm border-[#52B788]/30">
+                  <SelectItem value="all">All Orders</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Layout toggle */}
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="border-[#52B788]/30 text-[#2D5016] hover:bg-[#52B788]/10 hover:border-[#52B788] transition-all duration-300"
+              >
+                <Grid3X3 className="h-4 w-4" />
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
+
+        {/* Results count */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 text-[#2D5016]/70">
+            <Package className="w-4 h-4 text-[#52B788]" />
+            <p className="font-medium">
+              {sortedItems.length} item{sortedItems.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
+        </div>
+
+        {/* Purchase Items List */}
+        {sortedItems.length > 0 ? (
+          <div className="space-y-4">
+            {sortedItems.map((item, index) => (
+              <Card 
+                key={`${item.purchaseId}-${item.product.id}-${index}`} 
+                className="hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20 hover:ring-white/30 group"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-6">
+                    {/* Product Image */}
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#52B788]/5 shadow-lg">
+                      <img
+                        src={getProductImageUrl(item.product.image_url, "80x80")}
+                        alt={item.product.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10"></div>
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-xl leading-6 truncate mb-2 text-[#1B4332] group-hover:text-[#52B788] transition-colors duration-300">
+                            {item.product.title}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-[#2D5016]/60 mb-3">
+                            <span className="text-2xl font-bold bg-gradient-to-r from-[#52B788] to-[#2D5016] bg-clip-text text-transparent">
+                              ${item.price}
+                            </span>
+                            {item.product.category_name && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs border-[#52B788]/30 text-[#2D5016] bg-[#52B788]/5"
+                              >
+                                {item.product.category_name}
+                              </Badge>
+                            )}
+                            {item.product.seller?.username && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-[#52B788]" />
+                                <span>Sold by {item.product.seller.username}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Order Info */}
+                        <div className="text-right ml-6 space-y-2">
+                          <Badge 
+                            variant={item.status === "completed" ? "default" : 
+                                   item.status === "pending" ? "secondary" : "destructive"}
+                            className={`${
+                              item.status === "completed" 
+                                ? "bg-gradient-to-r from-[#52B788] to-[#2D5016] text-white" 
+                                : item.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                                : "bg-red-100 text-red-800 border-red-300"
+                            }`}
+                          >
+                            {item.status}
+                          </Badge>
+                          
+                          <div className="bg-[#52B788]/5 p-3 rounded-lg">
+                            <p className="text-xs text-[#2D5016]/60 font-medium">
+                              Order #{item.orderNumber}
+                            </p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Calendar className="w-3 h-3 text-[#52B788]" />
+                              <p className="text-xs text-[#2D5016]/60">
+                                {new Date(item.purchaseDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            {item.quantity > 1 && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Package className="w-3 h-3 text-[#52B788]" />
+                                <p className="text-xs text-[#2D5016]/60">
+                                  Qty: {item.quantity}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg ring-1 ring-white/20">
+            <CardContent className="p-12 text-center">
+              <div className="relative">
+                <div className="w-24 h-24 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShoppingBag className="h-12 w-12 text-[#52B788]/60" />
+                </div>
+                {/* Floating sparkles around empty state */}
+                <Sparkles className="absolute top-0 left-1/2 transform -translate-x-8 w-6 h-6 text-[#52B788]/40 animate-pulse" />
+                <Sparkles className="absolute top-8 right-1/2 transform translate-x-8 w-4 h-4 text-[#2D5016]/40 animate-pulse" style={{ animationDelay: '1s' }} />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-[#1B4332] mb-3">No purchases found</h3>
+              <p className="text-[#2D5016]/70 text-lg mb-8 max-w-md mx-auto">
+                {searchTerm || filterBy !== "all" 
+                  ? "Try adjusting your search or filters to find what you're looking for" 
+                  : "You haven't made any purchases yet. Start exploring our sustainable marketplace!"}
+              </p>
+              <Button 
+                asChild
+                className="bg-gradient-to-r from-[#52B788] to-[#2D5016] hover:from-[#2D5016] hover:to-[#52B788] text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-3"
+              >
+                <Link to="/">
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Start Shopping
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

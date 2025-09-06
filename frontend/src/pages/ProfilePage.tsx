@@ -5,13 +5,12 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { apiClient, User } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { User as UserIcon, Package, ShoppingBag, TrendingUp, Edit, Save, X, Camera } from "lucide-react"
+import { User as UserIcon, Package, ShoppingBag, TrendingUp, Edit, Save, X, Camera, Leaf, Shield, Award } from "lucide-react"
 import { getFullImageUrl } from "@/lib/imageUtils"
 
 interface Dashboard {
@@ -171,11 +170,13 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#F8FDF8] via-white to-[#FFF8DC]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#52B788]/30 border-t-[#52B788] mx-auto mb-6"></div>
+              <p className="text-[#1B4332] text-lg font-medium">Loading your profile...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -183,282 +184,369 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="relative">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={getFullImageUrl(user?.profile_image_url) || "/placeholder.svg"} alt={user?.username} />
-            <AvatarFallback className="text-xl">{user?.username.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="absolute -top-2 -right-2 h-8 w-8 rounded-full p-0"
-            onClick={() => {
-              console.log("Edit button clicked")
-              navigate("/profile?edit=true")
-            }}
-            disabled={isEditing}
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
-        </div>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">{user?.username}</h1>
-          <p className="text-muted-foreground">{user?.email}</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#F8FDF8] via-white to-[#FFF8DC] relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-[#B7E4C7]/15 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-[#52B788]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '-3s'}}></div>
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-[#8FBC8F]/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '-1.5s'}}></div>
       </div>
 
-      {/* Profile Content - Direct Layout */}
-      <div className="space-y-6">
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Hero Profile Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center bg-gradient-to-r from-[#52B788]/20 to-[#2D5016]/20 backdrop-blur-sm rounded-2xl px-6 py-3 mb-8 border border-[#52B788]/30">
+            <UserIcon className="w-5 h-5 text-[#52B788] mr-2" />
+            <span className="text-[#1B4332] font-semibold">Profile Dashboard</span>
+          </div>
+          
+          <div className="relative inline-block mb-6">
+            <div className="relative">
+              <Avatar className="h-32 w-32 border-4 border-[#52B788]/20 shadow-2xl">
+                <AvatarImage src={getFullImageUrl(user?.profile_image_url) || "/placeholder.svg"} alt={user?.username} />
+                <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-[#52B788] to-[#2D5016] text-white">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#10B981] border-4 border-white rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">✓</span>
+              </div>
+            </div>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-bold text-[#1B4332] mb-4">{user?.username}</h1>
+          <p className="text-xl text-[#6B7280] mb-6">{user?.email}</p>
+          
+          <div className="flex justify-center">
+            <Button 
+              onClick={() => navigate("/profile?edit=true")}
+              className="bg-gradient-to-r from-[#52B788] to-[#2D5016] text-white hover:shadow-xl transition-all duration-300 hover:scale-105 px-8 py-3 rounded-2xl"
+              disabled={isEditing}
+            >
+              <Edit className="mr-2 h-5 w-5" />
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+
         {/* Statistics Cards */}
         {dashboard && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
-                  <Package className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboard.statistics.total_listings}</p>
-                    <p className="text-sm text-muted-foreground">Total Listings</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboard.statistics.active_listings}</p>
-                    <p className="text-sm text-muted-foreground">Active Listings</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboard.statistics.sold_items}</p>
-                    <p className="text-sm text-muted-foreground">Items Sold</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
-                  <UserIcon className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboard.statistics.total_purchases}</p>
-                    <p className="text-sm text-muted-foreground">Purchases</p>
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-[#1B4332] text-center mb-8">
+              Your <span className="bg-gradient-to-r from-[#52B788] to-[#2D5016] bg-clip-text text-transparent">Impact</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm border border-[#B7E4C7]/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Package className="h-7 w-7 text-[#52B788]" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#1B4332]">{dashboard.statistics.total_listings}</p>
+                      <p className="text-[#6B7280] font-medium">Total Listings</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm border border-[#B7E4C7]/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <TrendingUp className="h-7 w-7 text-[#52B788]" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#1B4332]">{dashboard.statistics.active_listings}</p>
+                      <p className="text-[#6B7280] font-medium">Active Listings</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm border border-[#B7E4C7]/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Award className="h-7 w-7 text-[#52B788]" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#1B4332]">{dashboard.statistics.sold_items}</p>
+                      <p className="text-[#6B7280] font-medium">Items Sold</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm border border-[#B7E4C7]/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <ShoppingBag className="h-7 w-7 text-[#52B788]" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#1B4332]">{dashboard.statistics.total_purchases}</p>
+                      <p className="text-[#6B7280] font-medium">Purchases</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Profile Header with Avatar and Edit Button */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-[#B7E4C7]/20 mb-8">
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-[#1B4332] flex items-center gap-2">
+                <Shield className="w-6 h-6 text-[#52B788]" />
+                Profile Management
+              </h2>
+              <div className="flex gap-3">
+                <Button 
+                  variant={isEditing ? "outline" : "default"} 
+                  onClick={handleEditToggle}
+                  disabled={updateLoading}
+                  className={isEditing ? 
+                    "border-[#6B7280] text-[#6B7280] hover:bg-[#6B7280] hover:text-white transition-all duration-300" :
+                    "bg-gradient-to-r from-[#52B788] to-[#2D5016] text-white hover:shadow-xl transition-all duration-300"
+                  }
+                >
+                  {isEditing ? (
+                    <>
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </>
+                  )}
+                </Button>
+                {isEditing && (
+                  <Button 
+                    onClick={handleUpdateProfile} 
+                    disabled={updateLoading}
+                    className="bg-gradient-to-r from-[#52B788] to-[#2D5016] text-white hover:shadow-xl transition-all duration-300"
+                  >
+                    {updateLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-8">
               <div className="relative">
-                <Avatar className="h-24 w-24">
+                <Avatar className="h-24 w-24 border-4 border-[#52B788]/20 shadow-lg">
                   <AvatarImage 
                     src={profileImage ? URL.createObjectURL(profileImage) : getFullImageUrl(profile?.profile_image_url) || "/placeholder.svg"} 
                     alt={profile?.username} 
                   />
-                  <AvatarFallback className="text-2xl">{profile?.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-[#52B788] to-[#2D5016] text-white">
+                    {profile?.username?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 {isEditing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full cursor-pointer">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer backdrop-blur-sm transition-all duration-300 hover:bg-black/70">
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
-                    <Camera className="h-6 w-6 text-white" />
+                    <Camera className="h-8 w-8 text-white" />
                   </div>
                 )}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#10B981] border-3 border-white rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </div>
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold">{profile?.username}</h2>
-                <p className="text-muted-foreground">{profile?.email}</p>
+                <h3 className="text-2xl font-bold text-[#1B4332] mb-1">{profile?.username}</h3>
+                <p className="text-[#6B7280] mb-3">{profile?.email}</p>
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#52B788]/10 text-[#52B788] border border-[#52B788]/20 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="flex items-center gap-1">
+                      <Leaf className="w-3 h-3" />
+                      Verified Member
+                    </span>
+                  </div>
+                </div>
               </div>
-              <Button 
-                variant={isEditing ? "outline" : "default"} 
-                onClick={handleEditToggle}
-                disabled={updateLoading}
-              >
-                {isEditing ? (
-                  <>
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
-                  </>
-                ) : (
-                  <>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Profile
-                  </>
-                )}
-              </Button>
-              {isEditing && (
-                <Button onClick={handleUpdateProfile} disabled={updateLoading}>
-                  {updateLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-[#B7E4C7]/20 mb-8">
+          <div className="p-8">
+            <h3 className="text-2xl font-bold text-[#1B4332] mb-6 flex items-center gap-2">
+              <UserIcon className="w-6 h-6 text-[#52B788]" />
+              Profile Information
+            </h3>
             {profile ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="username" className="text-sm font-medium text-muted-foreground">Username</Label>
-                  <Input
-                    id="username"
-                    value={profile.username}
-                    disabled
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Username cannot be changed</p>
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
-                </div>
-                <div>
-                  <Label htmlFor="first_name" className="text-sm font-medium text-muted-foreground">First Name</Label>
-                  {isEditing ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="username" className="text-sm font-semibold text-[#1B4332] mb-2 block">Username</Label>
                     <Input
-                      id="first_name"
-                      value={editForm.first_name}
-                      onChange={(e) => handleInputChange("first_name", e.target.value)}
-                      placeholder="Enter your first name"
-                      className="mt-1"
-                    />
-                  ) : (
-                    <Input
-                      value={profile.first_name || "Not provided"}
+                      id="username"
+                      value={profile.username}
                       disabled
-                      className="mt-1"
+                      className="bg-[#F8FDF8] border-[#B7E4C7]/30 text-[#1B4332] cursor-not-allowed"
                     />
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="last_name" className="text-sm font-medium text-muted-foreground">Last Name</Label>
-                  {isEditing ? (
+                    <p className="text-xs text-[#6B7280] mt-1">Username cannot be changed</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-semibold text-[#1B4332] mb-2 block">Email</Label>
                     <Input
-                      id="last_name"
-                      value={editForm.last_name}
-                      onChange={(e) => handleInputChange("last_name", e.target.value)}
-                      placeholder="Enter your last name"
-                      className="mt-1"
-                    />
-                  ) : (
-                    <Input
-                      value={profile.last_name || "Not provided"}
+                      id="email"
+                      type="email"
+                      value={profile.email}
                       disabled
-                      className="mt-1"
+                      className="bg-[#F8FDF8] border-[#B7E4C7]/30 text-[#1B4332] cursor-not-allowed"
                     />
-                  )}
+                    <p className="text-xs text-[#6B7280] mt-1">Email cannot be changed</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="first_name" className="text-sm font-semibold text-[#1B4332] mb-2 block">First Name</Label>
+                    {isEditing ? (
+                      <Input
+                        id="first_name"
+                        value={editForm.first_name}
+                        onChange={(e) => handleInputChange("first_name", e.target.value)}
+                        placeholder="Enter your first name"
+                        className="border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20"
+                      />
+                    ) : (
+                      <Input
+                        value={profile.first_name || "Not provided"}
+                        disabled
+                        className="bg-white border-[#B7E4C7]/30 text-[#1B4332]"
+                      />
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-medium text-muted-foreground">Phone</Label>
-                  {isEditing ? (
-                    <Input
-                      id="phone"
-                      value={editForm.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      placeholder="Enter your phone number"
-                      className="mt-1"
-                    />
-                  ) : (
-                    <Input
-                      value={profile.phone || "Not provided"}
-                      disabled
-                      className="mt-1"
-                    />
-                  )}
+                
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="last_name" className="text-sm font-semibold text-[#1B4332] mb-2 block">Last Name</Label>
+                    {isEditing ? (
+                      <Input
+                        id="last_name"
+                        value={editForm.last_name}
+                        onChange={(e) => handleInputChange("last_name", e.target.value)}
+                        placeholder="Enter your last name"
+                        className="border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20"
+                      />
+                    ) : (
+                      <Input
+                        value={profile.last_name || "Not provided"}
+                        disabled
+                        className="bg-white border-[#B7E4C7]/30 text-[#1B4332]"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="phone" className="text-sm font-semibold text-[#1B4332] mb-2 block">Phone</Label>
+                    {isEditing ? (
+                      <Input
+                        id="phone"
+                        value={editForm.phone}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        placeholder="Enter your phone number"
+                        className="border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20"
+                      />
+                    ) : (
+                      <Input
+                        value={profile.phone || "Not provided"}
+                        disabled
+                        className="bg-white border-[#B7E4C7]/30 text-[#1B4332]"
+                      />
+                    )}
+                  </div>
                 </div>
+                
                 <div className="md:col-span-2">
-                  <Label htmlFor="address" className="text-sm font-medium text-muted-foreground">Address</Label>
+                  <Label htmlFor="address" className="text-sm font-semibold text-[#1B4332] mb-2 block">Address</Label>
                   {isEditing ? (
                     <Textarea
                       id="address"
                       value={editForm.address}
                       onChange={(e) => handleInputChange("address", e.target.value)}
                       placeholder="Enter your address"
-                      className="mt-1"
+                      className="border-[#52B788]/30 focus:border-[#52B788] focus:ring-[#52B788]/20"
                       rows={3}
                     />
                   ) : (
                     <Textarea
                       value={profile.address || "Not provided"}
                       disabled
-                      className="mt-1"
+                      className="bg-white border-[#B7E4C7]/30 text-[#1B4332]"
                       rows={3}
                     />
                   )}
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground">Failed to load profile information</p>
+              <p className="text-[#6B7280]">Failed to load profile information</p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quick Actions Navigation */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button 
-                asChild 
-                variant="outline" 
-                className="h-16 flex items-center justify-center gap-3"
-              >
-                <Link to="/my-products">
-                  <Package className="h-5 w-5" />
-                  My Listings
-                </Link>
-              </Button>
-              <Button 
-                asChild 
-                variant="outline" 
-                className="h-16 flex items-center justify-center gap-3"
-              >
-                <Link to="/purchase-history">
-                  <ShoppingBag className="h-5 w-5" />
-                  My Purchases
-                </Link>
-              </Button>
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-[#B7E4C7]/20">
+          <div className="p-8">
+            <h3 className="text-2xl font-bold text-[#1B4332] mb-6 text-center">
+              Quick <span className="bg-gradient-to-r from-[#52B788] to-[#2D5016] bg-clip-text text-transparent">Actions</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link to="/my-products" className="group">
+                <div className="bg-gradient-to-br from-[#F8FDF8] to-[#B7E4C7]/20 border border-[#B7E4C7]/30 rounded-2xl p-8 transition-all duration-500 hover:shadow-xl hover:scale-105 group-hover:bg-gradient-to-br group-hover:from-[#52B788]/10 group-hover:to-[#2D5016]/10">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Package className="h-8 w-8 text-[#52B788]" />
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-xl font-bold text-[#1B4332] group-hover:text-[#52B788] transition-colors duration-300">
+                        My Listings
+                      </h4>
+                      <p className="text-[#6B7280] mt-1">Manage your products</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              
+              <Link to="/purchase-history" className="group">
+                <div className="bg-gradient-to-br from-[#F8FDF8] to-[#B7E4C7]/20 border border-[#B7E4C7]/30 rounded-2xl p-8 transition-all duration-500 hover:shadow-xl hover:scale-105 group-hover:bg-gradient-to-br group-hover:from-[#52B788]/10 group-hover:to-[#2D5016]/10">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#52B788]/20 to-[#2D5016]/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <ShoppingBag className="h-8 w-8 text-[#52B788]" />
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-xl font-bold text-[#1B4332] group-hover:text-[#52B788] transition-colors duration-300">
+                        My Purchases
+                      </h4>
+                      <p className="text-[#6B7280] mt-1">View order history</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
