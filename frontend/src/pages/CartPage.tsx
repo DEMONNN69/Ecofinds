@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
+import { Minus, Plus, Trash2, ShoppingBag, Leaf, Sparkles, Star, CreditCard } from "lucide-react"
 import { getProductImageUrl } from "@/lib/imageUtils"
 
 export default function CartPage() {
@@ -132,11 +132,26 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading cart...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#F8FDF8] via-[#FFF8DC] to-[#B7E4C7]/20 relative overflow-hidden">
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Leaf className="absolute top-20 left-[10%] w-8 h-8 text-[#52B788]/20 animate-pulse" />
+          <Sparkles className="absolute top-32 right-[15%] w-6 h-6 text-[#2D5016]/30 animate-bounce" />
+          <ShoppingBag className="absolute bottom-40 left-[20%] w-10 h-10 text-[#52B788]/15 animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#52B788] to-[#2D5016] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <ShoppingBag className="w-10 h-10 text-white" />
+              </div>
+              <div className="space-y-2">
+                <div className="w-48 h-4 bg-[#52B788]/20 rounded-full mx-auto animate-pulse"></div>
+                <div className="w-32 h-3 bg-[#52B788]/10 rounded-full mx-auto animate-pulse"></div>
+              </div>
+              <p className="text-[#2D5016]/70 mt-4 text-lg">Loading cart...</p>
+            </div>
           </div>
         </div>
       </div>
