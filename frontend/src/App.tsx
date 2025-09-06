@@ -10,6 +10,7 @@ import CartPage from "./pages/CartPage"
 import ProfilePage from "./pages/ProfilePage"
 import AddProductPage from "./pages/AddProductPage"
 import MyProductsPage from "./pages/MyProductsPage"
+import PurchaseHistoryPage from "./pages/PurchaseHistoryPage"
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/add-product" element={<AddProductPage />} />
             <Route path="/products/:id/edit" element={<AddProductPage />} />
             <Route path="/my-products" element={<MyProductsPage />} />
+            <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
           </Routes>
         </main>
         <Toaster />

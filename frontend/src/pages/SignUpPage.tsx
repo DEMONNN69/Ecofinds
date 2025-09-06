@@ -9,8 +9,9 @@ import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { useToast } from "../hooks/use-toast"
-import { Leaf } from "lucide-react"
+import { Leaf, Camera } from "lucide-react"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -18,7 +19,10 @@ export default function SignUpPage() {
     email: "",
     password: "",
     password_confirm: "",
+    first_name: "",
+    last_name: "",
   })
+  const [profileImage, setProfileImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -29,6 +33,13 @@ export default function SignUpPage() {
       ...formData,
       [e.target.name]: e.target.value,
     })
+  }
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setProfileImage(file)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +57,7 @@ export default function SignUpPage() {
     setLoading(true)
 
     try {
-      const result = await register(formData)
+      const result = await register(formData, profileImage || undefined)
 
       if (result.success) {
         toast({
@@ -111,6 +122,59 @@ export default function SignUpPage() {
                 onChange={handleChange}
                 placeholder="Enter your email"
               />
+            </div>
+
+            {/* Profile Image */}
+            <div className="space-y-2">
+              <Label>Profile Picture (Optional)</Label>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage 
+                    src={profileImage ? URL.createObjectURL(profileImage) : undefined} 
+                    alt="Profile" 
+                  />
+                  <AvatarFallback>
+                    <Camera className="h-6 w-6 text-muted-foreground" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload a profile picture (optional)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Name Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name (Optional)</Label>
+                <Input
+                  id="first_name"
+                  name="first_name"
+                  type="text"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  placeholder="First name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name (Optional)</Label>
+                <Input
+                  id="last_name"
+                  name="last_name"
+                  type="text"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  placeholder="Last name"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

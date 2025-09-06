@@ -2,32 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
-import { apiClient } from "@/lib/api"
+import { apiClient, User } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { User, Package, ShoppingBag, TrendingUp } from "lucide-react"
-import { getFullImageUrl, getProductImageUrl } from "@/lib/imageUtils"
-
-interface UserProfile {
-  id: number
-  email: string
-  username: string
-  first_name: string
-  last_name: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  zip_code: string
-  profile_image_url: string
-  created_at: string
-  updated_at: string
-}
+import { User as UserIcon, Package, ShoppingBag, TrendingUp, Edit, Save, X, Camera } from "lucide-react"
+import { getFullImageUrl } from "@/lib/imageUtils"
 
 interface Dashboard {
   user_info: {
@@ -50,36 +35,26 @@ interface Dashboard {
   }>
 }
 
-interface Purchase {
-  id: number
-  order_number: string
-  items: Array<{
-    product: {
-      id: number
-      title: string
-      image_url: string
-    }
-    quantity: number
-    price_at_purchase: number
-  }>
-  total_amount: number
-  status: string
-  created_at: string
-  completed_at: string
-}
-
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { toast } = useToast()
 
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profile, setProfile] = useState<User | null>(null)
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
-  const [purchases, setPurchases] = useState<Purchase[]>([])
   const [loading, setLoading] = useState(true)
-
-  const activeTab = searchParams.get("tab") || "dashboard"
+  
+  // Edit profile state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    address: "",
+  })
+  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [updateLoading, setUpdateLoading] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -89,24 +64,35 @@ export default function ProfilePage() {
     fetchData()
   }, [user, navigate])
 
+  // Check for edit mode from URL parameter
+  useEffect(() => {
+    const editMode = searchParams.get("edit")
+    console.log("Edit mode from URL:", editMode)
+    if (editMode === "true") {
+      console.log("Setting edit mode to true")
+      setIsEditing(true)
+    }
+  }, [searchParams])
+
   const fetchData = async () => {
     try {
-      const [profileResponse, dashboardResponse, purchasesResponse] = await Promise.all([
+      const [profileResponse, dashboardResponse] = await Promise.all([
         apiClient.getUserProfile(),
         apiClient.getUserDashboard(),
-        apiClient.getPurchaseHistory(),
       ])
 
-      if (profileResponse.data) {
-        setProfile(profileResponse.data)
-      }
-
-      if (dashboardResponse.data) {
-        setDashboard(dashboardResponse.data)
-      }
-
-      if (purchasesResponse.data) {
-        setPurchases(purchasesResponse.data.results || [])
+      // API methods return response.data directly
+      setProfile(profileResponse)
+      setDashboard(dashboardResponse)
+      
+      // Initialize edit form with current profile data
+      if (profileResponse) {
+        setEditForm({
+          first_name: profileResponse.first_name || "",
+          last_name: profileResponse.last_name || "",
+          phone: profileResponse.phone || "",
+          address: profileResponse.address || "",
+        })
       }
     } catch (error) {
       toast({
@@ -116,6 +102,70 @@ export default function ProfilePage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Reset form to current profile data
+      if (profile) {
+        setEditForm({
+          first_name: profile.first_name || "",
+          last_name: profile.last_name || "",
+          phone: profile.phone || "",
+          address: profile.address || "",
+        })
+      }
+      setProfileImage(null)
+      // Clear edit mode from URL
+      navigate("/profile")
+    } else {
+      // Enable edit mode
+      navigate("/profile?edit=true")
+    }
+    setIsEditing(!isEditing)
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setProfileImage(file)
+    }
+  }
+
+  const handleUpdateProfile = async () => {
+    setUpdateLoading(true)
+    try {
+      const updatedProfile = await apiClient.updateUserProfile(editForm, profileImage || undefined)
+      setProfile(updatedProfile)
+      
+      // Refresh the user in AuthContext to update the header and other components
+      await refreshUser()
+      
+      setIsEditing(false)
+      setProfileImage(null)
+      // Clear edit mode from URL
+      navigate("/profile")
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      })
+    } catch (error: any) {
+      console.error("Profile update error:", error)
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update profile",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdateLoading(false)
     }
   }
 
@@ -135,228 +185,281 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <Avatar className="h-16 w-16">
-          <AvatarImage src={getFullImageUrl(user?.profile_image_url) || "/placeholder.svg"} alt={user?.username} />
-          <AvatarFallback className="text-xl">{user?.username.charAt(0).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
+        <div className="relative">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={getFullImageUrl(user?.profile_image_url) || "/placeholder.svg"} alt={user?.username} />
+            <AvatarFallback className="text-xl">{user?.username.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="absolute -top-2 -right-2 h-8 w-8 rounded-full p-0"
+            onClick={() => {
+              console.log("Edit button clicked")
+              navigate("/profile?edit=true")
+            }}
+            disabled={isEditing}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold">{user?.username}</h1>
           <p className="text-muted-foreground">{user?.email}</p>
         </div>
       </div>
 
-      <Tabs value={activeTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="profile">My Profile</TabsTrigger>
-          <TabsTrigger value="purchases">My Purchases</TabsTrigger>
-          <TabsTrigger value="products">My Products</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="space-y-6">
-          {dashboard && (
-            <>
-              {/* Statistics Cards */}
+      {/* Profile Content - Direct Layout */}
+      <div className="space-y-6">
+        {/* Statistics Cards */}
+        {dashboard && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Statistics</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-2xl font-bold">{dashboard.statistics.total_listings}</p>
-                        <p className="text-sm text-muted-foreground">Total Listings</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
+                  <Package className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold">{dashboard.statistics.total_listings}</p>
+                    <p className="text-sm text-muted-foreground">Total Listings</p>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-2xl font-bold">{dashboard.statistics.active_listings}</p>
-                        <p className="text-sm text-muted-foreground">Active Listings</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold">{dashboard.statistics.active_listings}</p>
+                    <p className="text-sm text-muted-foreground">Active Listings</p>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2">
-                      <ShoppingBag className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-2xl font-bold">{dashboard.statistics.sold_items}</p>
-                        <p className="text-sm text-muted-foreground">Items Sold</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold">{dashboard.statistics.sold_items}</p>
+                    <p className="text-sm text-muted-foreground">Items Sold</p>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-2xl font-bold">{dashboard.statistics.total_purchases}</p>
-                        <p className="text-sm text-muted-foreground">Purchases</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50">
+                  <UserIcon className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-2xl font-bold">{dashboard.statistics.total_purchases}</p>
+                    <p className="text-sm text-muted-foreground">Purchases</p>
+                  </div>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
 
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dashboard.recent_activity.length > 0 ? (
-                    <div className="space-y-4">
-                      {dashboard.recent_activity.map((activity, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                          <div className="flex-1">
-                            <p className="font-medium">{activity.description}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(activity.timestamp).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge variant="outline">{activity.type}</Badge>
-                        </div>
-                      ))}
-                    </div>
+        {/* Profile Header with Avatar and Edit Button */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage 
+                    src={profileImage ? URL.createObjectURL(profileImage) : getFullImageUrl(profile?.profile_image_url) || "/placeholder.svg"} 
+                    alt={profile?.username} 
+                  />
+                  <AvatarFallback className="text-2xl">{profile?.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                {isEditing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold">{profile?.username}</h2>
+                <p className="text-muted-foreground">{profile?.email}</p>
+              </div>
+              <Button 
+                variant={isEditing ? "outline" : "default"} 
+                onClick={handleEditToggle}
+                disabled={updateLoading}
+              >
+                {isEditing ? (
+                  <>
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </>
+                )}
+              </Button>
+              {isEditing && (
+                <Button onClick={handleUpdateProfile} disabled={updateLoading}>
+                  {updateLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
                   ) : (
-                    <p className="text-muted-foreground">No recent activity</p>
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
                   )}
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {profile ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Username</label>
-                    <p className="text-lg">{profile.username}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <p className="text-lg">{profile.email}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">First Name</label>
-                    <p className="text-lg">{profile.first_name || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Last Name</label>
-                    <p className="text-lg">{profile.last_name || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                    <p className="text-lg">{profile.phone || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Address</label>
-                    <p className="text-lg">{profile.address || "Not provided"}</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Failed to load profile information</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="purchases" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Purchase History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {purchases.length > 0 ? (
-                <div className="space-y-4">
-                  {purchases.map((purchase) => (
-                    <div key={purchase.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-semibold">Order #{purchase.order_number}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(purchase.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg">${purchase.total_amount}</p>
-                          <Badge variant={purchase.status === "completed" ? "default" : "secondary"}>
-                            {purchase.status}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        {purchase.items.map((item, index) => (
-                          <div key={index} className="flex items-center gap-3">
-                            <div className="relative w-12 h-12 rounded overflow-hidden">
-                              <img
-                                src={getProductImageUrl(item.product.image_url, "48x48")}
-                                alt={item.product.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{item.product.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Qty: {item.quantity} × ${item.price_at_purchase}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No purchases yet</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/">Start Shopping</Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">My Products</h2>
-            <Button asChild>
-              <Link to="/add-product">Add New Product</Link>
-            </Button>
-          </div>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center py-8">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">View and manage your products from the My Products page</p>
-                <Button asChild>
-                  <Link to="/my-products">Go to My Products</Link>
                 </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Profile Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="username" className="text-sm font-medium text-muted-foreground">Username</Label>
+                  <Input
+                    id="username"
+                    value={profile.username}
+                    disabled
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Username cannot be changed</p>
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profile.email}
+                    disabled
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                </div>
+                <div>
+                  <Label htmlFor="first_name" className="text-sm font-medium text-muted-foreground">First Name</Label>
+                  {isEditing ? (
+                    <Input
+                      id="first_name"
+                      value={editForm.first_name}
+                      onChange={(e) => handleInputChange("first_name", e.target.value)}
+                      placeholder="Enter your first name"
+                      className="mt-1"
+                    />
+                  ) : (
+                    <Input
+                      value={profile.first_name || "Not provided"}
+                      disabled
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="last_name" className="text-sm font-medium text-muted-foreground">Last Name</Label>
+                  {isEditing ? (
+                    <Input
+                      id="last_name"
+                      value={editForm.last_name}
+                      onChange={(e) => handleInputChange("last_name", e.target.value)}
+                      placeholder="Enter your last name"
+                      className="mt-1"
+                    />
+                  ) : (
+                    <Input
+                      value={profile.last_name || "Not provided"}
+                      disabled
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-medium text-muted-foreground">Phone</Label>
+                  {isEditing ? (
+                    <Input
+                      id="phone"
+                      value={editForm.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      placeholder="Enter your phone number"
+                      className="mt-1"
+                    />
+                  ) : (
+                    <Input
+                      value={profile.phone || "Not provided"}
+                      disabled
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="address" className="text-sm font-medium text-muted-foreground">Address</Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="address"
+                      value={editForm.address}
+                      onChange={(e) => handleInputChange("address", e.target.value)}
+                      placeholder="Enter your address"
+                      className="mt-1"
+                      rows={3}
+                    />
+                  ) : (
+                    <Textarea
+                      value={profile.address || "Not provided"}
+                      disabled
+                      className="mt-1"
+                      rows={3}
+                    />
+                  )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ) : (
+              <p className="text-muted-foreground">Failed to load profile information</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions Navigation */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button 
+                asChild 
+                variant="outline" 
+                className="h-16 flex items-center justify-center gap-3"
+              >
+                <Link to="/my-products">
+                  <Package className="h-5 w-5" />
+                  My Listings
+                </Link>
+              </Button>
+              <Button 
+                asChild 
+                variant="outline" 
+                className="h-16 flex items-center justify-center gap-3"
+              >
+                <Link to="/purchase-history">
+                  <ShoppingBag className="h-5 w-5" />
+                  My Purchases
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

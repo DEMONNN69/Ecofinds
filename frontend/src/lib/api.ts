@@ -124,6 +124,8 @@ export interface RegisterData {
   password: string;
   password_confirm: string;
   username: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface ApiResponse<T> {
@@ -217,8 +219,24 @@ class ApiClient {
     return userData;
   }
 
-  async register(data: RegisterData) {
-    const response = await this.client.post('/auth/register/', data);
+  async register(data: RegisterData, profileImage?: File) {
+    const formData = new FormData();
+    
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    if (profileImage) {
+      formData.append('profile_image', profileImage);
+    }
+
+    const response = await this.client.post('/auth/register/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     const { access_token, refresh_token, ...userData } = response.data;
     this.saveTokens(access_token, refresh_token);
     return userData;
@@ -370,7 +388,7 @@ class ApiClient {
     items: Array<{
       product_id: number;
       quantity: number;
-      price: number;
+      price_at_purchase: number;
     }>;
     shipping_address: string;
     payment_method: string;

@@ -22,7 +22,9 @@ interface AuthContextType {
     password: string
     password_confirm: string
     username: string
-  }) => Promise<{ success: boolean; error?: string }>
+    first_name?: string
+    last_name?: string
+  }, profileImage?: File) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -70,9 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string
     password_confirm: string
     username: string
-  }) => {
+    first_name?: string
+    last_name?: string
+  }, profileImage?: File) => {
     try {
-      const registeredUser = await apiClient.register(userData)
+      const registeredUser = await apiClient.register(userData, profileImage)
       setUser(registeredUser)
       return { success: true }
     } catch (error: any) {

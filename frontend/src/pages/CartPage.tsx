@@ -99,10 +99,11 @@ export default function CartPage() {
     setCheckoutLoading(true)
     try {
       const purchaseData = {
+        cart_id: cart.id,
         items: cart.items.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          price: parseFloat(item.product.price), // Convert string to number
+          price_at_purchase: parseFloat(item.product.price), // Convert string to number
         })),
         shipping_address: shippingAddress,
         payment_method: paymentMethod,
@@ -116,8 +117,7 @@ export default function CartPage() {
         description: `Your order #${purchase.order_number} has been placed successfully`,
       })
 
-      // Clear cart and redirect
-      await apiClient.clearCart()
+      // Redirect to purchase history
       navigate("/profile?tab=purchases")
     } catch (error) {
       toast({

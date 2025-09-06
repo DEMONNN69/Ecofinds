@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from decimal import Decimal
 from .models import Purchase, PurchaseItem
 from products.models import Product
 from cart.models import Cart
@@ -36,7 +37,8 @@ def create_purchase(request):
                 }, status=status.HTTP_400_BAD_REQUEST)
         
         # Verify total amount
-        if abs(total_calculated - float(request.data.get('total_amount', 0))) > 0.01:
+        total_from_request = Decimal(str(request.data.get('total_amount', 0)))
+        if abs(total_calculated - total_from_request) > Decimal('0.01'):
             return Response({
                 'message': 'Total amount mismatch'
             }, status=status.HTTP_400_BAD_REQUEST)

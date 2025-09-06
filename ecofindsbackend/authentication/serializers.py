@@ -5,10 +5,11 @@ from users.models import CustomUser
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
+    profile_image = serializers.ImageField(required=False)
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'username', 'password', 'password_confirm')
+        fields = ('email', 'username', 'password', 'password_confirm', 'profile_image', 'first_name', 'last_name')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
